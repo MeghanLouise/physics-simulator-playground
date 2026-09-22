@@ -31,15 +31,28 @@ export class Renderer {
     return [this.width / 2 + x * k, this.height / 2 + y * k];
   }
 
-  draw(state, params, trail) {
+  // Inverse of toScreen: screen pixels -> world units.
+  toWorld(sx, sy, p) {
+    const k = this.scale(p);
+    return [(sx - this.width / 2) / k, (sy - this.height / 2) / k];
+  }
+
+  // twin: optional { state, trail } for a second, perturbed pendulum drawn
+  // in a contrasting color to show sensitivity to initial conditions.
+  draw(state, params, trail, twin) {
     const { ctx, width, height } = this;
     ctx.clearRect(0, 0, width, height);
     this.drawTrail(trail, params);
+    if (twin) {
+      this.drawTrail(twin.trail, params, { color: '255, 140, 60' });
+      this.drawPendulum(twin.state, params, { stroke: '#ff8c3c88', fill: '#ffb37c' });
+    }
     this.drawPendulum(state, params);
   }
 
   // trail: array of {x, y, speed} in world units, oldest first.
-  drawTrail(trail, params) {
+  // opts.color: fixed "r, g, b" string to use instead of the speed gradient.
+  drawTrail(trail, params, opts = {}) {
     const { ctx } = this;
     const n = trail.length;
     if (n < 2) return;
@@ -51,8 +64,12 @@ export class Renderer {
       const [ax, ay] = this.toScreen(a.x, a.y, params);
       const [bx, by] = this.toScreen(b.x, b.y, params);
       const age = i / n; // 0 = oldest, 1 = newest
-      const hue = 220 - Math.min(b.speed / 12, 1) * 220; // blue (slow) -> red (fast)
-      ctx.strokeStyle = `hsla(${hue}, 90%, 60%, ${age * age})`;
+      if (opts.color) {
+        ctx.strokeStyle = `rgba(${opts.color}, ${age * age})`;
+      } else {
+        const hue = 220 - Math.min(b.speed / 12, 1) * 220; // blue (slow) -> red (fast)
+        ctx.strokeStyle = `hsla(${hue}, 90%, 60%, ${age * age})`;
+      }
       ctx.beginPath();
       ctx.moveTo(ax, ay);
       ctx.lineTo(bx, by);
@@ -60,14 +77,17 @@ export class Renderer {
     }
   }
 
-  drawPendulum(state, params) {
+  drawPendulum(state, params, opts = {}) {
     const { ctx } = this;
     const { x1, y1, x2, y2 } = positions(state, params);
     const [px, py] = this.toScreen(0, 0, params);
     const [ax, ay] = this.toScreen(x1, y1, params);
     const [bx, by] = this.toScreen(x2, y2, params);
 
-    ctx.strokeStyle = '#8b93a7';
+    const stroke = opts.stroke ?? '#8b93a7';
+    const fill = opts.fill ?? '#e8eaf0';
+
+    ctx.strokeStyle = stroke;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(px, py);
@@ -77,12 +97,12 @@ export class Renderer {
 
     // Bob radius scales with sqrt(mass) so heavier bobs look heavier.
     const r = (m) => 6 + 5 * Math.sqrt(m);
-    ctx.fillStyle = '#8b93a7';
+    ctx.fillStyle = stroke;
     ctx.beginPath();
     ctx.arc(px, py, 4, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#e8eaf0';
+    ctx.fillStyle = fill;
     for (const [x, y, m] of [
       [ax, ay, params.m1],
       [bx, by, params.m2],

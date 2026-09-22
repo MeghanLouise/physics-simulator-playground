@@ -25,10 +25,18 @@ so the simulation is deterministic regardless of display refresh rate.
 The "energy drift" readout is a sanity check on the integrator; it should stay
 near zero.
 
+## Features
+
+- **Drag the bobs** directly on the canvas to set θ₁/θ₂ (this pauses the sim,
+  zeroes that arm's angular velocity, and syncs the sliders on release).
+- **Chaos twin** (orange): a second pendulum started with the same initial
+  conditions plus a tiny nudge to θ₁ (adjustable, 1e-8 to 1e-1 rad), stepped
+  in parallel. Watch the two trails overlap, then peel apart — sensitivity to
+  initial conditions made visible. "Twin separation" in the readout is the
+  distance between the two end-effector tips.
+
 ## Ideas / TODO
 
-- Drag the bobs with the mouse to set initial conditions
-- Second pendulum with a 1e-6 offset to show sensitivity to initial conditions
 - Poincaré section / phase-space plot
 - Randomize button (each `CONTROLS` entry keeps its `input` for pushing values back)
 - Swap `physics.js` for an orbital sim — the renderer/loop are system-agnostic-ish

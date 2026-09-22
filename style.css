@@ -97,6 +97,24 @@ input[type='range'] {
   accent-color: var(--accent);
 }
 
+.row-checkbox {
+  grid-template-columns: 1fr auto;
+}
+
+input[type='checkbox'] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
+
+canvas {
+  cursor: grab;
+}
+
+canvas.dragging {
+  cursor: grabbing;
+}
+
 #readout,
 .hint {
   margin: 16px 0 0;
